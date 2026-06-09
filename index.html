@@ -53,7 +53,7 @@ const db = getFirestore(app);
 function renderCard(id,data){
  return `
  <div class="card">
- <img src="${data.image || 'https://raw.githubusercontent.com/USERNAME/REPO/main/images/default.jpg'}">
+ <img src="${data.image || 'https://raw.githubusercontent.com/cartist777/Voting/main/images/default.jpg'}">
  <div class="info">
  <h4>${data.title||('작품 '+id)}</h4>
  <div>${data.student||''}</div>
@@ -65,6 +65,7 @@ function renderCard(id,data){
  </div>
  </div>`;
 }
+
 
 window.fund = async(id,amount)=>{
  // 로그인 제거했으므로 코인 차감 없이 펀딩만 증가
