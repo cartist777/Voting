@@ -53,7 +53,7 @@ const db = getFirestore(app);
 function renderCard(id,data){
  return `
  <div class="card">
- <img src="${data.image || 'https://raw.githubusercontent.com/cartist777/Voting/main/images/default.jpg'}">
+ <img src="${data.image || 'https://github.com/cartist777/Voting/images/default.jpg'}">
  <div class="info">
  <h4>${data.title||('작품 '+id)}</h4>
  <div>${data.student||''}</div>
