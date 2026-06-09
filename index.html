@@ -58,10 +58,10 @@ function renderCard(id,data){
  <h4>${data.title||('작품 '+id)}</h4>
  <div>${data.student||''}</div>
  <p>${data.description||''}</p>
- <b>💰 ${data.funding||0} 코인</b><br><br>
- <button onclick="fund('${id}',10)">100원</button>
- <button onclick="fund('${id}',20)">200원</button>
- <button onclick="fund('${id}',50)">500원</button>
+ <b>💰 ${data.funding||0} 원</b><br><br>
+ <button onclick="fund('${id}',100)">100원</button>
+ <button onclick="fund('${id}',200)">200원</button>
+ <button onclick="fund('${id}',500)">500원</button>
  </div>
  </div>`;
 }
@@ -70,7 +70,7 @@ function renderCard(id,data){
 window.fund = async(id,amount)=>{
  // 로그인 제거했으므로 코인 차감 없이 펀딩만 증가
  await updateDoc(doc(db,"artworks",id),{funding:increment(amount)});
- alert(amount+" 코인 펀딩 완료!");
+ alert(amount+" 원 펀딩 완료!");
 };
 
 onSnapshot(collection(db,"artworks"),(snap)=>{
@@ -88,7 +88,7 @@ onSnapshot(collection(db,"artworks"),(snap)=>{
  ranking.sort((a,b)=>(b.funding||0)-(a.funding||0));
 
  top3.innerHTML=ranking.slice(0,3)
- .map((x,i)=>`${i+1}위 ${x.title} (${x.funding||0}코인)`)
+ .map((x,i)=>`${i+1}위 ${x.title} (${x.funding||0}원)`)
  .join("<br>");
 });
 </script>
