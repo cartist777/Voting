@@ -1,367 +1,142 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>25개 상품 실시간 펀딩 대시보드 (순위 반영)</title>
-    <style>
-        :root {
-            --primary-color: #4f46e5;
-            --success-color: #10b981;
-            --background-color: #f8fafc;
-            --card-background: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-        }
-
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* 상단 고정 누적 합계 헤더 */
-        header {
-            position: sticky;
-            top: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            border: 1px solid #e2e8f0;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .header-stats {
-            display: flex;
-            gap: 30px;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .total-counter {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--primary-color);
-        }
-
-        .top-product-display {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--success-color);
-        }
-
-        /* 25개 상품 그리드 레이아웃 */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-        }
-
-        @media (max-width: 1400px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (max-width: 1000px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
-
-        /* 상품 카드 스타일 */
-        .product-card {
-            background: var(--card-background);
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        /* 실시간 1등 상품 카드를 돋보이게 하는 스타일 */
-        .product-card.winner {
-            border-color: var(--success-color);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-            transform: translateY(-5px);
-        }
-
-        /* 1등 뱃지 */
-        .winner-badge {
-            display: none;
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background-color: var(--success-color);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .product-card.winner .winner-badge {
-            display: block;
-        }
-
-        /* 이미지 영역 */
-        .image-container {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            background-color: #f1f5f9;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .product-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* 상품 정보 영역 */
-        .product-info {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex-grow: 1;
-        }
-
-        .product-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        /* 🌟 추가된 개별 누적 금액 섹션 */
-        .accumulated-box {
-            background-color: #f1f5f9;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .accumulated-box.has-fund {
-            background-color: #e0e7ff;
-        }
-
-        .accumulated-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .accumulated-amount {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .product-card.winner .accumulated-amount {
-            color: var(--success-color);
-        }
-
-        /* 입력 및 버튼 영역 */
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 6px;
-        }
-
-        .funding-input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            box-sizing: border-box;
-            font-weight: 600;
-            text-align: right;
-        }
-
-        /* 펀딩하기 버튼 */
-        .fund-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0 14px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .fund-btn:hover {
-            background-color: #4338ca;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학생 그림 펀딩 플랫폼</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f7fb;margin:0}
+header{background:#4f46e5;color:#fff;padding:16px;position:sticky;top:0}
+.container{max-width:1200px;margin:auto;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:768px){.grid{grid-template-columns:repeat(2,1fr)}}
+.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.card img{width:100%;aspect-ratio:1/1;object-fit:cover}
+.info{padding:12px}
+button{background:#4f46e5;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+.rank{background:#fff;padding:12px;border-radius:12px;margin-bottom:16px}
+</style>
 </head>
 <body>
+<header>
+<div class="top">
+<h2>🎨 학생 그림 펀딩 플랫폼</h2>
+<div>
+<button id="loginBtn">Google 로그인</button>
+<span id="userInfo"></span>
+<span id="coinInfo"></span>
+</div>
+</div>
+</header>
 
 <div class="container">
-    <header>
-        <h1>🎁 실시간 펀딩 경연 대시보드</h1>
-        <div class="header-stats">
-            <div class="stat-item">
-                <span class="stat-label">현재 실시간 1위 상품</span>
-                <span class="top-product-display" id="topProduct">없음</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">총 누적 펀딩 금액</span>
-                <span class="total-counter" id="grandTotal">0원</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="product-grid" id="productGrid"></main>
+<div class="rank">
+<h3>🏆 TOP 3</h3>
+<div id="top3"></div>
+</div>
+<div id="gallery" class="grid"></div>
 </div>
 
-<script>
-    const TOTAL_PRODUCTS = 25;
-    const productGrid = document.getElementById('productGrid');
-    const grandTotalDisplay = document.getElementById('grandTotal');
-    const topProductDisplay = document.getElementById('topProduct');
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-    // 25개 상품 각각의 누적 금액을 저장할 배열 (초기값은 모두 0원)
-    let productFunds = Array(TOTAL_PRODUCTS + 1).fill(0);
+const firebaseConfig = {
+ apiKey:"AIzaSyCz12idSMrOXQaVeUoIlGN4lOxgBovtsXQ",
+ authDomain:"classvoting-a0e95.firebaseapp.com",
+ projectId:"classvoting-a0e95",
+ storageBucket:"classvoting-a0e95.firebasestorage.app",
+ messagingSenderId:"384140463404",
+ appId:"1:384140463404:web:44cd9553316a622f4d3089",
+ measurementId:"G-14JV67N5V0"
+};
 
-    // 전체 화면 리프레시 및 통계 계산 함수
-    function updateDashboard() {
-        let grandTotal = 0;
-        let maxFund = 0;
-        let winnerIndex = 0;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        // 1. 각 상품별 데이터를 확인하며 총합 및 1위 추적
-        for (let i = 1; i <= TOTAL_PRODUCTS; i++) {
-            const currentFund = productFunds[i];
-            grandTotal += currentFund;
+let currentUser=null;
 
-            // 화면의 개별 누적금액 텍스트 업데이트
-            const amtDisplay = document.getElementById(`amt-${i}`);
-            const accBox = document.getElementById(`box-${i}`);
-            const card = document.getElementById(`card-${i}`);
-            
-            if (amtDisplay) {
-                amtDisplay.textContent = currentFund.toLocaleString('ko-KR') + '원';
-                
-                // 금액이 있으면 배경색 살짝 변경
-                if (currentFund > 0) {
-                    accBox.classList.add('has-fund');
-                }
-            }
+loginBtn.onclick=()=>signInWithPopup(auth,new GoogleAuthProvider());
 
-            // 기존 winner 클래스 임시 제거
-            if (card) card.classList.remove('winner');
+onAuthStateChanged(auth, async(user)=>{
+ currentUser=user;
+ if(!user) return;
 
-            // 가장 많은 금액을 받은 상품 찾기 (동점일 경우 기존 1위 유지)
-            if (currentFund > maxFund) {
-                maxFund = currentFund;
-                winnerIndex = i;
-            }
-        }
+ userInfo.innerText=user.displayName;
 
-        // 2. 총 누적 금액 업데이트
-        grandTotalDisplay.textContent = grandTotal.toLocaleString('ko-KR') + '원';
+ const userRef=doc(db,"users",user.uid);
+ const snap=await getDoc(userRef);
 
-        // 3. 1위 상품 하이라이트 및 상단 표시
-        if (winnerIndex > 0 && maxFund > 0) {
-            topProductDisplay.textContent = `상품 #${winnerIndex} (${maxFund.toLocaleString('ko-KR')}원)`;
-            document.getElementById(`card-${winnerIndex}`).classList.add('winner');
-        } else {
-            topProductDisplay.textContent = '없음';
-        }
-    }
+ if(!snap.exists()){
+   await setDoc(userRef,{
+      name:user.displayName,
+      coins:100
+   });
+   coinInfo.innerText="보유코인:100";
+ }else{
+   coinInfo.innerText="보유코인:"+snap.data().coins;
+ }
+});
 
-    // 펀딩하기 버튼 클릭 시 누적 금액을 추가하는 함수
-    function addFunding(index) {
-        const input = document.getElementById(`input-${index}`);
-        const value = parseInt(input.value) || 0;
+function renderCard(id,data){
+ return `
+ <div class="card">
+ <img src="${data.image||'https://picsum.photos/300?random='+id}">
+ <div class="info">
+ <h4>${data.title||('작품 '+id)}</h4>
+ <div>${data.student||''}</div>
+ <p>${data.description||''}</p>
+ <b>💰 ${data.funding||0} 코인</b><br><br>
+ <button onclick="fund('${id}',10)">10코인</button>
+ <button onclick="fund('${id}',20)">20코인</button>
+ <button onclick="fund('${id}',50)">50코인</button>
+ </div>
+ </div>`;
+}
 
-        if (value <= 0) {
-            alert('투자할 금액을 입력해 주세요.');
-            return;
-        }
+window.fund = async(id,amount)=>{
+ if(!currentUser){
+   alert("로그인하세요");
+   return;
+ }
 
-        // 기존 상품 누적액에 입력된 금액 누적 더하기
-        productFunds[index] += value;
+ const userRef=doc(db,"users",currentUser.uid);
+ const userSnap=await getDoc(userRef);
+ let coins=userSnap.data().coins;
 
-        // 입력창 초기화
-        input.value = '';
+ if(coins<amount){
+   alert("코인이 부족합니다.");
+   return;
+ }
 
-        // 대시보드 실시간 업데이트
-        updateDashboard();
-    }
+ await updateDoc(userRef,{coins:increment(-amount)});
+ await updateDoc(doc(db,"artworks",id),{funding:increment(amount)});
 
-    // 25개 상품 카드 화면에 생성
-    for (let i = 1; i <= TOTAL_PRODUCTS; i++) {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.id = `card-${i}`;
+ coinInfo.innerText="보유코인:"+(coins-amount);
+};
 
-        const imagePath = `images/${i}.jpg`; 
+onSnapshot(collection(db,"artworks"),(snap)=>{
 
-        card.innerHTML = `
-            <div class="winner-badge">👑 실시간 1위</div>
-            <div class="image-container">
-                <img src="${imagePath}" alt="상품 ${i}" class="product-image" onerror="this.src='https://via.placeholder.com/300?text=Product+${i}'">
-            </div>
-            <div class="product-info">
-                <h3 class="product-title">펀딩 상품 #${i}</h3>
-                
-                <div class="accumulated-box" id="box-${i}">
-                    <span class="accumulated-label">누적 펀딩액</span>
-                    <span class="accumulated-amount" id="amt-${i}">0원</span>
-                </div>
+ let html="";
+ let ranking=[];
 
-                <div class="input-group">
-                    <div class="input-row">
-                        <input type="number" 
-                               id="input-${i}" 
-                               class="funding-input" 
-                               placeholder="금액 입력" 
-                               min="0" 
-                               step="1000">
-                        <button class="fund-btn" onclick="addFunding(${i})">펀딩</button>
-                    </div>
-                </div>
-            </div>
-        `;
+ snap.forEach(d=>{
+   const data=d.data();
+   html+=renderCard(d.id,data);
+   ranking.push({...data,id:d.id});
+ });
 
-        productGrid.appendChild(card);
-    }
+ gallery.innerHTML=html;
+
+ ranking.sort((a,b)=>(b.funding||0)-(a.funding||0));
+
+ top3.innerHTML=ranking.slice(0,3)
+ .map((x,i)=>`${i+1}위 ${x.title} (${x.funding||0}코인)`)
+ .join("<br>");
+});
 </script>
-
 </body>
 </html>
