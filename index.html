@@ -68,7 +68,7 @@ function renderCard(id,data){
 
 
 window.fund = async(id,amount)=>{
- // 로그인 제거했으므로 코인 차감 없이 펀딩만 증가
+ // 로그인 제거했으므로 금액 차감 없이 펀딩만 증가
  await updateDoc(doc(db,"artworks",id),{funding:increment(amount)});
  alert(amount+" 원 펀딩 완료!");
 };
