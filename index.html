@@ -12,6 +12,7 @@ header{background:#4f46e5;color:#fff;padding:16px;position:sticky;top:0}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 @media(max-width:768px){.grid{grid-template-columns:repeat(2,1fr)}}
 .card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.card-title{font-size:20px;font-weight:bold;margin:12px 0;text-align:center}
 .card img{width:100%;aspect-ratio:1/1;object-fit:cover}
 .info{padding:12px}
 button{background:#4f46e5;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
@@ -22,6 +23,12 @@ button{background:#4f46e5;color:#fff;border:none;padding:8px 12px;border-radius:
 <header>
 <div class="top">
 <h2>🎨 학생 그림 펀딩 플랫폼</h2>
+<div>
+  <input type="text" id="usernameInput" placeholder="이름 입력">
+  <button id="loginBtn">로그인</button>
+  <span id="userInfo"></span>
+  <span id="fundInfo"></span>
+</div>
 </div>
 </header>
 
@@ -35,7 +42,7 @@ button{background:#4f46e5;color:#fff;border:none;padding:8px 12px;border-radius:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, doc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 const firebaseConfig = {
  apiKey:"AIzaSyCz12idSMrOXQaVeUoIlGN4lOxgBovtsXQ",
@@ -50,26 +57,65 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let currentUser = null;
+let currentFund = 0;
+const MAX_FUND = 1000;
+
+// 로그인 버튼 클릭
+loginBtn.onclick = async () => {
+  const name = usernameInput.value.trim();
+  if (!name) {
+    alert("이름을 입력하세요!");
+    return;
+  }
+  currentUser = name;
+  userInfo.innerText = "사용자: " + name;
+
+  const userRef = doc(db, "users", name);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) {
+    await setDoc(userRef, { name, funded: 0 });
+    currentFund = 0;
+  } else {
+    currentFund = snap.data().funded || 0;
+  }
+  fundInfo.innerText = "총 펀딩: " + currentFund + "원 / 최대 " + MAX_FUND + "원";
+};
+
 function renderCard(id,data){
  return `
  <div class="card">
- <img src="${data.image || 'https://github.com/cartist777/Voting/blob/c1ad0c80be55a5e17b4407bbacaf17f5dbb1210f/images/default.jpg'}">
- <div class="info">
- <h4>${data.title||('작품 '+id)}</h4>
- <div>${data.student||''}</div>
- <p>${data.description||''}</p>
- <b>💰 ${data.funding||0} 원</b><br><br>
- <button onclick="fund('${id}',100)">100원</button>
- <button onclick="fund('${id}',200)">200원</button>
- <button onclick="fund('${id}',500)">500원</button>
- </div>
+   <div class="card-title">${data.title || ('작품 '+id)}</div>
+   <img src="${data.image || 'https://raw.githubusercontent.com/cartist777/Voting/main/images/default.jpg'}">
+   <div class="info">
+     <div>${data.student||''}</div>
+     <p>${data.description||''}</p>
+     <b>💰 ${data.funding||0} 원</b><br><br>
+     <button onclick="fund('${id}',100)">100원</button>
+     <button onclick="fund('${id}',200)">200원</button>
+     <button onclick="fund('${id}',500)">500원</button>
+     <button onclick="fund('${id}',1000)">1000원</button>
+   </div>
  </div>`;
 }
 
-
 window.fund = async(id,amount)=>{
- // 로그인 제거했으므로 금액 차감 없이 펀딩만 증가
+ if (!currentUser) {
+   alert("먼저 이름으로 로그인하세요!");
+   return;
+ }
+
+ if (currentFund + amount > MAX_FUND) {
+   alert("최대 펀딩 한도(1000원)를 초과할 수 없습니다.");
+   return;
+ }
+
  await updateDoc(doc(db,"artworks",id),{funding:increment(amount)});
+ await updateDoc(doc(db,"users",currentUser),{funded:increment(amount)});
+
+ currentFund += amount;
+ fundInfo.innerText = "총 펀딩: " + currentFund + "원 / 최대 " + MAX_FUND + "원";
  alert(amount+" 원 펀딩 완료!");
 };
 
