@@ -17,6 +17,10 @@
   <h2>업로드된 작품 목록</h2>
   <div id="artworkList"></div>
 
+  <!-- 펀딩 초기화 버튼 -->
+  <hr>
+  <button id="resetFundingBtn">모든 작품 및 사용자 펀딩 초기화</button>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } 
@@ -70,6 +74,7 @@
             <img src="${data.image}" width="150"><br>
             <b>${data.title}</b> - ${data.student}<br>
             ${data.description}<br>
+            <b>현재 펀딩: ${data.funding || 0}원</b><br>
             <button onclick="editArtwork('${d.id}')">수정</button>
             <button onclick="deleteArtwork('${d.id}')">삭제</button>
           </div>
@@ -92,6 +97,26 @@
       alert("삭제 완료!");
       loadArtworks();
     };
+
+    // 펀딩 초기화 (작품 + 사용자)
+    document.getElementById("resetFundingBtn").addEventListener("click", async () => {
+      if (!confirm("모든 작품과 사용자 펀딩 금액을 0으로 초기화하시겠습니까?")) return;
+
+      // artworks 컬렉션 초기화
+      const artworksSnap = await getDocs(collection(db, "artworks"));
+      for (const d of artworksSnap.docs) {
+        await updateDoc(doc(db, "artworks", d.id), { funding: 0 });
+      }
+
+      // users 컬렉션 초기화
+      const usersSnap = await getDocs(collection(db, "users"));
+      for (const u of usersSnap.docs) {
+        await updateDoc(doc(db, "users", u.id), { funded: 0 });
+      }
+
+      alert("모든 작품과 사용자 펀딩 금액이 초기화되었습니다!");
+      loadArtworks();
+    });
 
     loadArtworks();
   </script>
