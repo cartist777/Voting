@@ -13,13 +13,15 @@
   <input type="text" id="imageUrl" placeholder="GitHub 이미지 Raw URL"><br>
   <button id="uploadBtn">업로드</button>
 
+  <!-- 펀딩 초기화 버튼 -->
+  <hr>
+  <button id="resetFundingBtn">모든 작품 및 사용자 펀딩 초기화</button>
+  
   <hr>
   <h2>업로드된 작품 목록</h2>
   <div id="artworkList"></div>
 
-  <!-- 펀딩 초기화 버튼 -->
-  <hr>
-  <button id="resetFundingBtn">모든 작품 및 사용자 펀딩 초기화</button>
+
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
